@@ -50,6 +50,8 @@ void inputHandler(FTPClient& ftp)
 
     while (std::getline(std::cin, input_line, '\n')) {
         auto lexems = get_lexems(input_line);
+        if (lexems.size() == 0)
+            continue;
         auto cmd = std::move(lexems[0]);
 
         if (cmd == "CWD") {

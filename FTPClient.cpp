@@ -187,8 +187,7 @@ int FTPClient::writeDataTo(std::ostream& out)
             return 0;
         }
 
-        data_buffer[bytes_received] = '\0';
-        out << data_buffer;
+        out.write(data_buffer, bytes_received);
     }
 }
 

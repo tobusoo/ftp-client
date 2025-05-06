@@ -4,7 +4,7 @@
 #include <string>
 
 #define CONTROL_BUFFER_LEN 4084
-#define DATA_BUFFER_LEN 4084
+#define DATA_BUFFER_LEN (4084 * 1024)
 
 class FTPClient {
 public:

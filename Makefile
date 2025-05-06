@@ -1,4 +1,4 @@
-CXXFLAGS=-Wall -g -Wextra -pedantic -std=c++20 -I.
+CXXFLAGS=-Wall -g -Wextra -pedantic -std=c++20 -I. -g
 
 all: ftp
 
