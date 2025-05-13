@@ -41,6 +41,91 @@ int RETR(FTPClient& ftp, Lexems& lexems)
     return ftp.RETR(lexems[1], lexems[2]);
 }
 
+int STOR(FTPClient& ftp, Lexems& lexems)
+{
+    if (lexems.size() != 3) {
+        std::cerr << "Wrong argument for STOR\n";
+        std::cerr << "STOR <local-file> <remote-file>\n";
+        return -1;
+    }
+
+    return ftp.STOR(lexems[1], lexems[2]);
+}
+
+int APPE(FTPClient& ftp, Lexems& lexems)
+{
+    if (lexems.size() != 3) {
+        std::cerr << "Wrong argument for APPE\n";
+        std::cerr << "APPE <local-file> <remote-file>\n";
+        return -1;
+    }
+
+    return ftp.APPE(lexems[1], lexems[2]);
+}
+
+int DELE(FTPClient& ftp, Lexems& lexems)
+{
+    if (lexems.size() != 2) {
+        std::cerr << "Wrong argument for DELE\n";
+        std::cerr << "DELE <filename>\n";
+        return -1;
+    }
+
+    return ftp.DELE(lexems[1]);
+}
+
+int MKD(FTPClient& ftp, Lexems& lexems)
+{
+    if (lexems.size() != 2) {
+        std::cerr << "Wrong argument for MKD\n";
+        std::cerr << "MKD <directory>\n";
+        return -1;
+    }
+
+    return ftp.MKD(lexems[1]);
+}
+
+int RMD(FTPClient& ftp, Lexems& lexems)
+{
+    if (lexems.size() != 2) {
+        std::cerr << "Wrong argument for RMD\n";
+        std::cerr << "RMD <directory>\n";
+        return -1;
+    }
+
+    return ftp.RMD(lexems[1]);
+}
+
+int action(FTPClient& ftp, Lexems& lexems)
+{
+    int resp = 0;
+    auto cmd = lexems[0];
+
+    if (cmd == "CWD") {
+        resp = CWD(ftp, lexems);
+    } else if (cmd == "PWD") {
+        resp = ftp.PWD();
+    } else if (cmd == "LIST") {
+        resp = ftp.LIST(std::cout);
+    } else if (cmd == "RETR") {
+        resp = RETR(ftp, lexems);
+    } else if (cmd == "STOR") {
+        resp = STOR(ftp, lexems);
+    } else if (cmd == "APPE") {
+        resp = APPE(ftp, lexems);
+    } else if (cmd == "DELE") {
+        resp = DELE(ftp, lexems);
+    } else if (cmd == "MKD") {
+        resp = MKD(ftp, lexems);
+    } else if (cmd == "RMD") {
+        resp = RMD(ftp, lexems);
+    } else {
+        std::cerr << "Unknown command\n";
+    }
+
+    return resp;
+}
+
 void inputHandler(FTPClient& ftp)
 {
     int resp = 0;
@@ -52,20 +137,10 @@ void inputHandler(FTPClient& ftp)
         auto lexems = get_lexems(input_line);
         if (lexems.size() == 0)
             continue;
-        auto cmd = std::move(lexems[0]);
+        if (lexems[0] == "QUIT")
+            return;
 
-        if (cmd == "CWD") {
-            resp = CWD(ftp, lexems);
-        } else if (cmd == "PWD") {
-            resp = ftp.PWD();
-        } else if (cmd == "LIST") {
-            resp = ftp.LIST(std::cout);
-        } else if (cmd == "RETR") {
-            resp = RETR(ftp, lexems);
-        } else {
-            std::cerr << "Unknown command\n";
-        }
-
+        resp = action(ftp, lexems);
         if (resp != 0) {
             std::cerr << "Failed to: " << lexems[0] << '\n';
         }

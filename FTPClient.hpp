@@ -17,6 +17,12 @@ public:
     int PWD();
     int LIST(std::ostream& result);
     int RETR(const std::string& remote_file, const std::string& local_file);
+    int STOR(const std::string& local_file, const std::string& remote_file);
+    int APPE(const std::string& local_file, const std::string& remote_file);
+    int DELE(const std::string& filename);
+
+    int MKD(const std::string& dir);
+    int RMD(const std::string& dir);
 
     void Disconnect();
     ~FTPClient();
@@ -26,6 +32,7 @@ private:
     bool checkResponseCode(const std::string& expect);
     int getControlResponse(bool need_out = true);
     int writeDataTo(std::ostream& out);
+    int sendDataTo(std::istream& in);
 
     int PASV();
 

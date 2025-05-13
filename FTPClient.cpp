@@ -130,17 +130,105 @@ int FTPClient::RETR(const std::string& remote_file, const std::string& local_fil
     return resp;
 }
 
+int FTPClient::STOR(const std::string& local_file, const std::string& remote_file)
+{
+    if (PASV() == -1)
+        return -1;
+
+    if (sendCommand("STOR " + remote_file) == -1)
+        return -1;
+    if (!checkResponseCode("150"))
+        return -1;
+
+    std::ifstream in_file(local_file, std::ios::binary);
+    if (!in_file) {
+        if (control_out)
+            *control_out << "Can't open " << local_file << " file\n";
+        close(data_sock);
+        return -1;
+    }
+
+    int resp = sendDataTo(in_file);
+    close(data_sock);
+    resp |= getControlResponse();
+
+    return resp;
+}
+
+int FTPClient::APPE(const std::string& local_file, const std::string& remote_file)
+{
+    if (PASV() == -1)
+        return -1;
+
+    if (sendCommand("APPE " + remote_file) == -1)
+        return -1;
+
+    if (!checkResponseCode("150")) {
+        close(data_sock);
+        return -1;
+    }
+
+    std::ifstream in_file(local_file, std::ios::binary);
+    if (!in_file) {
+        if (control_out)
+            *control_out << "Can't open local file: " << local_file << "\n";
+        close(data_sock);
+        return -1;
+    }
+
+    int resp = sendDataTo(in_file);
+    close(data_sock);
+    resp |= getControlResponse();
+
+    return resp;
+}
+
+int FTPClient::DELE(const std::string& filename)
+{
+    if (sendCommand("DELE " + filename) == -1)
+        return -1;
+
+    if (!checkResponseCode("250")) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int FTPClient::MKD(const std::string& dir)
+{
+    if (sendCommand("MKD " + dir) == -1)
+        return -1;
+
+    if (!checkResponseCode("257")) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int FTPClient::RMD(const std::string& dir)
+{
+    if (sendCommand("RMD " + dir) == -1)
+        return -1;
+
+    if (!checkResponseCode("250")) {
+        return -1;
+    }
+
+    return 0;
+}
+
 void FTPClient::Disconnect()
 {
-    if (control_sock != -1) {
-        if (*control_out)
-            *control_out << '\n';
-        sendCommand("QUIT");
+    if (control_out)
+        *control_out << '\n';
+    sendCommand("QUIT");
+    if (control_sock != -1)
         close(control_sock);
-    }
-    if (data_sock != -1) {
+
+    if (data_sock != -1)
         close(data_sock);
-    }
 }
 
 FTPClient::~FTPClient()
@@ -189,6 +277,22 @@ int FTPClient::writeDataTo(std::ostream& out)
 
         out.write(data_buffer, bytes_received);
     }
+}
+
+int FTPClient::sendDataTo(std::istream& in)
+{
+    while (!in.eof()) {
+        in.read(data_buffer, DATA_BUFFER_LEN);
+        int bytes_read = in.gcount();
+        if (bytes_read > 0) {
+            int bytes_sent = send(data_sock, data_buffer, bytes_read, 0);
+            if (bytes_sent == -1) {
+                perror("readDataFrom send");
+                return -1;
+            }
+        }
+    }
+    return 0;
 }
 
 int FTPClient::PASV()
