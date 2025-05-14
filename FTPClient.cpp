@@ -97,6 +97,8 @@ int FTPClient::LIST(std::ostream& out)
 
     if (sendCommand("LIST") == -1)
         return -1;
+    if (!checkResponseCode("150"))
+        return -1;
 
     int resp = writeDataTo(out);
     close(data_sock);
@@ -148,7 +150,7 @@ int FTPClient::STOR(const std::string& local_file, const std::string& remote_fil
         return -1;
     }
 
-    int resp = sendDataTo(in_file);
+    int resp = sendDataFrom(in_file);
     close(data_sock);
     resp |= getControlResponse();
 
@@ -176,7 +178,7 @@ int FTPClient::APPE(const std::string& local_file, const std::string& remote_fil
         return -1;
     }
 
-    int resp = sendDataTo(in_file);
+    int resp = sendDataFrom(in_file);
     close(data_sock);
     resp |= getControlResponse();
 
@@ -279,7 +281,7 @@ int FTPClient::writeDataTo(std::ostream& out)
     }
 }
 
-int FTPClient::sendDataTo(std::istream& in)
+int FTPClient::sendDataFrom(std::istream& in)
 {
     while (!in.eof()) {
         in.read(data_buffer, DATA_BUFFER_LEN);

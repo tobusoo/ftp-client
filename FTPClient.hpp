@@ -32,7 +32,7 @@ private:
     bool checkResponseCode(const std::string& expect);
     int getControlResponse(bool need_out = true);
     int writeDataTo(std::ostream& out);
-    int sendDataTo(std::istream& in);
+    int sendDataFrom(std::istream& in);
 
     int PASV();
 
